@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Email Marketing Tool</title>
+<title>Email CRM</title>
 
 <style>
 
@@ -23,15 +23,27 @@ border-radius:10px;
 box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
+input{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
 #editor{
 border:1px solid #ccc;
 padding:15px;
-min-height:250px;
+min-height:200px;
 }
 
 button{
-padding:10px;
+padding:10px 15px;
 margin-top:10px;
+background:#2563eb;
+color:white;
+border:none;
+cursor:pointer;
 }
 
 .progress{
@@ -54,30 +66,18 @@ background:#2563eb;
 
 <div class="container">
 
-<h2>Email Sender</h2>
+<h2>Bulk Email Sender</h2>
 
 <input id="subject" placeholder="Email Subject">
-
-<br><br>
 
 <div id="editor" contenteditable="true">
 
 <h2>Hello</h2>
-<p>Write your email content here...</p>
+<p>Write email content here</p>
 
 </div>
 
 <br>
-
-<input type="file" id="imageFile">
-<button onclick="uploadImage()">Upload Image</button>
-
-<br><br>
-
-<input type="file" id="videoFile">
-<button onclick="uploadVideo()">Upload Video</button>
-
-<br><br>
 
 <button onclick="sendEmails()">Send Emails</button>
 
@@ -91,77 +91,20 @@ background:#2563eb;
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbzfzCouEPlxJ9fZVVCaCsQK8nYwTy7dPgMKe3cVDmQWWZAcYGM-aD0MWUTBbSzqOcXbCg/exec";
-
-function uploadFile(file){
-
-return new Promise(resolve=>{
-
-let reader=new FileReader();
-
-reader.onload=function(){
-
-let base64=reader.result.split(",")[1];
-
-let url=scriptURL+
-"?action=upload"+
-"&data="+encodeURIComponent(base64)+
-"&name="+file.name+
-"&type="+file.type+
-"&callback=fileUploadResponse";
-
-let script=document.createElement("script");
-
-window.fileUploadResponse=function(data){
-resolve(data.url);
-};
-
-script.src=url;
-
-document.body.appendChild(script);
-
-};
-
-reader.readAsDataURL(file);
-
-});
-
-}
-
-async function uploadImage(){
-
-let file=document.getElementById("imageFile").files[0];
-
-let url=await uploadFile(file);
-
-document.getElementById("editor")
-.innerHTML+=`<br><img src="${url}" width="400"><br>`;
-
-}
-
-async function uploadVideo(){
-
-let file=document.getElementById("videoFile").files[0];
-
-let url=await uploadFile(file);
-
-document.getElementById("editor")
-.innerHTML+=`<br><a href="${url}">Watch Video</a><br>`;
-
-}
+const scriptURL="https://script.google.com/macros/s/AKfycbz4w9aRCIborKjuEkA-o-aXAxZH52QBd_u4AR_4nmPekvoC8FH0GvE5UciqT10xqbZLaw/exec";
 
 function sendEmails(){
 
 let subject=document.getElementById("subject").value;
 let content=document.getElementById("editor").innerHTML;
 
-let url=scriptURL+
-"?action=send"+
-"&subject="+encodeURIComponent(subject)+
-"&content="+encodeURIComponent(content)+
+let url = scriptURL +
+"?subject=" + encodeURIComponent(subject) +
+"&content=" + encodeURIComponent(content) +
 "&callback=emailResponse";
 
 let script=document.createElement("script");
+
 script.src=url;
 
 document.body.appendChild(script);
@@ -175,7 +118,7 @@ function emailResponse(data){
 document.getElementById("bar").style.width="100%";
 
 document.getElementById("status").innerText=
-"Sent "+data.sent+" of "+data.total+" emails";
+"Sent " + data.sent + " of " + data.total + " emails";
 
 }
 
