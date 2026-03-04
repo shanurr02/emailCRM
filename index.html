@@ -3,7 +3,8 @@
 
 <head>
 
-<title>Email Sender</title>
+<meta charset="UTF-8">
+<title>Email Marketing Tool</title>
 
 <style>
 
@@ -19,6 +20,7 @@ margin:auto;
 background:white;
 padding:30px;
 border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.1);
 }
 
 #editor{
@@ -32,6 +34,18 @@ padding:10px;
 margin-top:10px;
 }
 
+.progress{
+height:20px;
+background:#ddd;
+margin-top:15px;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#2563eb;
+}
+
 </style>
 
 </head>
@@ -42,33 +56,34 @@ margin-top:10px;
 
 <h2>Email Sender</h2>
 
-<input id="subject" placeholder="Subject">
+<input id="subject" placeholder="Email Subject">
 
 <br><br>
 
 <div id="editor" contenteditable="true">
 
 <h2>Hello</h2>
-
-<p>Write email content here</p>
+<p>Write your email content here...</p>
 
 </div>
 
 <br>
 
 <input type="file" id="imageFile">
-
 <button onclick="uploadImage()">Upload Image</button>
 
 <br><br>
 
 <input type="file" id="videoFile">
-
 <button onclick="uploadVideo()">Upload Video</button>
 
 <br><br>
 
 <button onclick="sendEmails()">Send Emails</button>
+
+<div class="progress">
+<div id="bar" class="bar"></div>
+</div>
 
 <p id="status"></p>
 
@@ -76,7 +91,7 @@ margin-top:10px;
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbxHhX3-i0v_9FZUzU0PeZfAwFD73xzfqZ7sEZIu8TVE-qgXGlXL9Z9NNWF1xMcsBlWOKw/exec";
+const scriptURL="https://script.google.com/macros/s/AKfycbzfzCouEPlxJ9fZVVCaCsQK8nYwTy7dPgMKe3cVDmQWWZAcYGM-aD0MWUTBbSzqOcXbCg/exec";
 
 function uploadFile(file){
 
@@ -92,11 +107,18 @@ let url=scriptURL+
 "?action=upload"+
 "&data="+encodeURIComponent(base64)+
 "&name="+file.name+
-"&type="+file.type;
+"&type="+file.type+
+"&callback=fileUploadResponse";
 
-fetch(url)
-.then(res=>res.json())
-.then(data=>resolve(data.url));
+let script=document.createElement("script");
+
+window.fileUploadResponse=function(data){
+resolve(data.url);
+};
+
+script.src=url;
+
+document.body.appendChild(script);
 
 };
 
@@ -131,22 +153,29 @@ document.getElementById("editor")
 function sendEmails(){
 
 let subject=document.getElementById("subject").value;
-
 let content=document.getElementById("editor").innerHTML;
 
 let url=scriptURL+
 "?action=send"+
 "&subject="+encodeURIComponent(subject)+
-"&content="+encodeURIComponent(content);
+"&content="+encodeURIComponent(content)+
+"&callback=emailResponse";
 
-fetch(url)
-.then(res=>res.json())
-.then(data=>{
+let script=document.createElement("script");
+script.src=url;
+
+document.body.appendChild(script);
+
+document.getElementById("status").innerText="Sending emails...";
+
+}
+
+function emailResponse(data){
+
+document.getElementById("bar").style.width="100%";
 
 document.getElementById("status").innerText=
-"Sent "+data.sent+" of "+data.total;
-
-});
+"Sent "+data.sent+" of "+data.total+" emails";
 
 }
 
