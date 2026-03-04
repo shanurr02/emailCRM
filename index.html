@@ -3,8 +3,7 @@
 
 <head>
 
-<meta charset="UTF-8">
-<title>Email Marketing Tool</title>
+<title>Email Sender</title>
 
 <style>
 
@@ -19,68 +18,18 @@ width:900px;
 margin:auto;
 background:white;
 padding:30px;
-border-radius:12px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
-}
-
-h2{
-margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:12px;
-margin-bottom:15px;
-border:1px solid #ccc;
-border-radius:6px;
-}
-
-.toolbar{
-margin-bottom:10px;
-}
-
-.toolbar button{
-padding:8px 12px;
-margin-right:5px;
-border:none;
-background:#2563eb;
-color:white;
-border-radius:4px;
-cursor:pointer;
+border-radius:10px;
 }
 
 #editor{
 border:1px solid #ccc;
-border-radius:6px;
 padding:15px;
 min-height:250px;
-background:#fafafa;
 }
 
-.sendBtn{
-margin-top:20px;
-padding:14px;
-width:100%;
-background:#10b981;
-border:none;
-color:white;
-font-size:16px;
-border-radius:6px;
-cursor:pointer;
-}
-
-.progress{
-margin-top:20px;
-height:25px;
-background:#ddd;
-border-radius:20px;
-overflow:hidden;
-}
-
-.bar{
-height:100%;
-width:0%;
-background:#2563eb;
+button{
+padding:10px;
+margin-top:10px;
 }
 
 </style>
@@ -91,39 +40,35 @@ background:#2563eb;
 
 <div class="container">
 
-<h2>Bulk Email Sender</h2>
+<h2>Email Sender</h2>
 
-<label>Email Subject</label>
-<input id="subject" placeholder="Enter email subject">
+<input id="subject" placeholder="Subject">
 
-<div class="toolbar">
-
-<button onclick="format('bold')">Bold</button>
-<button onclick="format('italic')">Italic</button>
-<button onclick="format('insertUnorderedList')">List</button>
-
-<input type="file" id="imageFile">
-<button onclick="uploadImage()">Image</button>
-
-<input type="file" id="videoFile">
-<button onclick="uploadVideo()">Video</button>
-
-</div>
+<br><br>
 
 <div id="editor" contenteditable="true">
 
 <h2>Hello</h2>
-<p>Write your email content here...</p>
+
+<p>Write email content here</p>
 
 </div>
 
-<button class="sendBtn" onclick="sendEmails()">
-Send Emails
-</button>
+<br>
 
-<div class="progress">
-<div id="bar" class="bar"></div>
-</div>
+<input type="file" id="imageFile">
+
+<button onclick="uploadImage()">Upload Image</button>
+
+<br><br>
+
+<input type="file" id="videoFile">
+
+<button onclick="uploadVideo()">Upload Video</button>
+
+<br><br>
+
+<button onclick="sendEmails()">Send Emails</button>
 
 <p id="status"></p>
 
@@ -131,11 +76,7 @@ Send Emails
 
 <script>
 
-const scriptURL="https://script.google.com/macros/s/AKfycbw0klQ_lAVBfPv0Tbjy-4k3Qz0sS0Dq63znI62m9IRYdROhX-klMLcBytIs3ir0tOjBcg/exec";
-
-function format(cmd){
-document.execCommand(cmd,false,null);
-}
+const scriptURL="https://script.google.com/macros/s/AKfycbxHhX3-i0v_9FZUzU0PeZfAwFD73xzfqZ7sEZIu8TVE-qgXGlXL9Z9NNWF1xMcsBlWOKw/exec";
 
 function uploadFile(file){
 
@@ -147,15 +88,13 @@ reader.onload=function(){
 
 let base64=reader.result.split(",")[1];
 
-fetch(scriptURL,{
-method:"POST",
-body:new URLSearchParams({
-action:"upload",
-data:base64,
-name:file.name,
-type:file.type
-})
-})
+let url=scriptURL+
+"?action=upload"+
+"&data="+encodeURIComponent(base64)+
+"&name="+file.name+
+"&type="+file.type;
+
+fetch(url)
 .then(res=>res.json())
 .then(data=>resolve(data.url));
 
@@ -174,7 +113,7 @@ let file=document.getElementById("imageFile").files[0];
 let url=await uploadFile(file);
 
 document.getElementById("editor")
-.innerHTML += `<br><img src="${url}" width="450"><br>`;
+.innerHTML+=`<br><img src="${url}" width="400"><br>`;
 
 }
 
@@ -185,32 +124,27 @@ let file=document.getElementById("videoFile").files[0];
 let url=await uploadFile(file);
 
 document.getElementById("editor")
-.innerHTML += `<br><a href="${url}">Watch Video</a><br>`;
+.innerHTML+=`<br><a href="${url}">Watch Video</a><br>`;
 
 }
 
 function sendEmails(){
 
 let subject=document.getElementById("subject").value;
+
 let content=document.getElementById("editor").innerHTML;
 
-document.getElementById("status").innerText="Sending emails...";
+let url=scriptURL+
+"?action=send"+
+"&subject="+encodeURIComponent(subject)+
+"&content="+encodeURIComponent(content);
 
-fetch(scriptURL,{
-method:"POST",
-body:new URLSearchParams({
-action:"send",
-subject:subject,
-content:content
-})
-})
+fetch(url)
 .then(res=>res.json())
 .then(data=>{
 
-document.getElementById("bar").style.width="100%";
-
 document.getElementById("status").innerText=
-"Sent "+data.sent+" of "+data.total+" emails";
+"Sent "+data.sent+" of "+data.total;
 
 });
 
