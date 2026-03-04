@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Email Marketing Tool</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef2f7;
+padding:40px;
+}
+
+.container{
+width:900px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2{
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.toolbar{
+margin-bottom:10px;
+}
+
+.toolbar button{
+padding:8px 12px;
+margin-right:5px;
+border:none;
+background:#2563eb;
+color:white;
+border-radius:4px;
+cursor:pointer;
+}
+
+#editor{
+border:1px solid #ccc;
+border-radius:6px;
+padding:15px;
+min-height:250px;
+background:#fafafa;
+}
+
+.sendBtn{
+margin-top:20px;
+padding:14px;
+width:100%;
+background:#10b981;
+border:none;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.progress{
+margin-top:20px;
+height:25px;
+background:#ddd;
+border-radius:20px;
+overflow:hidden;
+}
+
+.bar{
+height:100%;
+width:0%;
+background:#2563eb;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Bulk Email Sender</h2>
+
+<label>Email Subject</label>
+<input id="subject" placeholder="Enter email subject">
+
+<div class="toolbar">
+
+<button onclick="format('bold')">Bold</button>
+<button onclick="format('italic')">Italic</button>
+<button onclick="format('insertUnorderedList')">List</button>
+
+<input type="file" id="imageFile">
+<button onclick="uploadImage()">Image</button>
+
+<input type="file" id="videoFile">
+<button onclick="uploadVideo()">Video</button>
+
+</div>
+
+<div id="editor" contenteditable="true">
+
+<h2>Hello</h2>
+<p>Write your email content here...</p>
+
+</div>
+
+<button class="sendBtn" onclick="sendEmails()">
+Send Emails
+</button>
+
+<div class="progress">
+<div id="bar" class="bar"></div>
+</div>
+
+<p id="status"></p>
+
+</div>
+
+<script>
+
+const scriptURL="https://script.google.com/macros/s/AKfycbw0klQ_lAVBfPv0Tbjy-4k3Qz0sS0Dq63znI62m9IRYdROhX-klMLcBytIs3ir0tOjBcg/exec";
+
+function format(cmd){
+document.execCommand(cmd,false,null);
+}
+
+function uploadFile(file){
+
+return new Promise(resolve=>{
+
+let reader=new FileReader();
+
+reader.onload=function(){
+
+let base64=reader.result.split(",")[1];
+
+fetch(scriptURL,{
+method:"POST",
+body:new URLSearchParams({
+action:"upload",
+data:base64,
+name:file.name,
+type:file.type
+})
+})
+.then(res=>res.json())
+.then(data=>resolve(data.url));
+
+};
+
+reader.readAsDataURL(file);
+
+});
+
+}
+
+async function uploadImage(){
+
+let file=document.getElementById("imageFile").files[0];
+
+let url=await uploadFile(file);
+
+document.getElementById("editor")
+.innerHTML += `<br><img src="${url}" width="450"><br>`;
+
+}
+
+async function uploadVideo(){
+
+let file=document.getElementById("videoFile").files[0];
+
+let url=await uploadFile(file);
+
+document.getElementById("editor")
+.innerHTML += `<br><a href="${url}">Watch Video</a><br>`;
+
+}
+
+function sendEmails(){
+
+let subject=document.getElementById("subject").value;
+let content=document.getElementById("editor").innerHTML;
+
+document.getElementById("status").innerText="Sending emails...";
+
+fetch(scriptURL,{
+method:"POST",
+body:new URLSearchParams({
+action:"send",
+subject:subject,
+content:content
+})
+})
+.then(res=>res.json())
+.then(data=>{
+
+document.getElementById("bar").style.width="100%";
+
+document.getElementById("status").innerText=
+"Sent "+data.sent+" of "+data.total+" emails";
+
+});
+
+}
+
+</script>
+
+</body>
+
+</html>
